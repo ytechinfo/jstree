@@ -40,7 +40,10 @@
 
 	//sidebutton
 	.jstree-sidebutton { 
-		&.align-right{float: right;	}
+		&.align-right{
+			position: absolute;
+			right: 0px;	
+		}
 		&.hide{display: none;}
 
 		& > .jstree-side-item {
@@ -66,11 +69,14 @@
 
 // sidebutton
 .jstree-sidebutton-plugin{
-	.jstree-node .jstree-anchor {
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
-	}
+	.jstree-node{
+		position: relative;
+		.jstree-anchor {
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}	
+	} 
 }
 
 // theme variants

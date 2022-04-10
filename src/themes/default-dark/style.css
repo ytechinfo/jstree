@@ -387,7 +387,8 @@
   background: linear-gradient(to bottom, #5fa2db 0%, #5fa2db 100%);
 }
 .jstree-default-dark .jstree-sidebutton.align-right {
-  float: right;
+  position: absolute;
+  right: 0px;
 }
 .jstree-default-dark .jstree-sidebutton.hide {
   display: none;
@@ -405,6 +406,9 @@
 }
 .jstree-default-dark .jstree-node.show-button > .jstree-sidebutton {
   display: inline;
+}
+.jstree-sidebutton-plugin .jstree-node {
+  position: relative;
 }
 .jstree-sidebutton-plugin .jstree-node .jstree-anchor {
   white-space: nowrap;

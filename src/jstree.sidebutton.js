@@ -60,7 +60,26 @@
 				console.log('del',item)
 			}}
 			*/
-		]
+		],
+		/**
+		 * a function invoked each time a tree node button is about to be add - return `false` to prevent hide
+		 * 
+		 * * `node` a object - tree node info
+		 * @name $.jstree.defaults.sidebutton.is_hide
+		 * @plugin is_hide
+		 */
+		is_hide : false,
+		/**
+		 * a function invoked each time a tree node button is about to be add. Returns a list of buttons to be seen. - return `array`
+		 * 
+		 * * `node` a object - tree node info
+		 * * `items` a array - button list
+		 * @name $.jstree.defaults.sidebutton.filter_button
+		 * @plugin filter_button
+		 */
+		filter_button : function (node, items){
+			return items; 
+		}
 	};
 
 	var $$idx =0;
@@ -75,6 +94,39 @@
 			this._data.sidebutton.allBtnInfo = {};
 
 			var items = this.settings.sidebutton.items ||[];
+			
+			var templateHtml = this.get_button_template(items);
+
+			var widthCheckId= "widthCheckEl-"+( ++$$idx); 
+			this.element.append('<span id="'+widthCheckId+'" class="jstree-'+(this.settings.core.themes.name ||'default')+'" style="visibility: hidden;">'+templateHtml+'</span>');
+			this._data.sidebutton.maxWidth = Math.ceil($('#'+widthCheckId +'>.jstree-sidebutton').outerWidth())+30; //31 = icon width + padding
+			this._data.sidebutton.buttonHtml  = templateHtml;
+					
+			this.element.on('click.jstree','.jstree-side-item', function(e){
+				var ele = $(this);
+				var btnKey = ele.data('btn-key');
+				var btnInfo = _this._data.sidebutton.allBtnInfo[btnKey]; 
+
+				var obj = _this.get_node(e.target);
+
+				if(btnInfo){
+					btnInfo.onClick.call(this,  obj);
+				}
+			});
+
+			if(!this.settings.sidebutton.always_view){
+				this.element.on('mouseover.jstree', '.jstree-node', function(e){
+					e.stopPropagation();
+					$(this).addClass('show-button');
+				}).on('mouseout.jstree', '.jstree-node', function(e){
+					$(this).removeClass('show-button');
+				});
+			}
+			
+		};
+
+		this.get_button_template = function(items){
+
 			var alwaysView = this.settings.sidebutton.always_view;
 			var align = this.settings.sidebutton.align;
 			var styleClass = this.settings.sidebutton.styleClass;
@@ -103,39 +155,13 @@
 			
 			strHtm.push('</span></span><span style="clear:both;">');
 
-			var widthCheckId= "widthCheckEl-"+( ++$$idx); 
-			this.element.append('<span id="'+widthCheckId+'" class="jstree-'+(this.settings.core.themes.name ||'default')+'" style="visibility: hidden;">'+strHtm.join('')+'</span>');
-			this._data.sidebutton.maxWidth = Math.ceil($('#'+widthCheckId +'>.jstree-sidebutton').outerWidth())+30; //31 = icon width + padding
-			this._data.sidebutton.buttonHtml  = strHtm.join('');
-					
-			this.element.on('click.jstree','.jstree-side-item', function(e){
-				var ele = $(this);
-				var btnKey = ele.data('btn-key');
-				var btnInfo = _this._data.sidebutton.allBtnInfo[btnKey]; 
-
-				var obj = _this.get_node(e.target);
-
-				if(btnInfo){
-					btnInfo.onClick.call(this,  obj);
-				}
-			});
-
-			if(!alwaysView){
-				this.element.on('mouseover.jstree', '.jstree-node', function(e){
-					e.stopPropagation();
-					$(this).addClass('show-button');
-				}).on('mouseout.jstree', '.jstree-node', function(e){
-					$(this).removeClass('show-button');
-				});
-			}
-			
+			return strHtm.join('');
 		};
 
 		this.redraw_node = function(obj, deep, callback, force_render) {
 
 			obj = parent.redraw_node.apply(this, arguments);
-			
-			
+						
 			if(obj) {
 				var i, j, tmp = null, icon = null;
 				for(i = 0, j = obj.childNodes.length; i < j; i++) {
@@ -145,9 +171,21 @@
 					}
 				}
 				if(tmp) {
-					$(tmp).after(this._data.sidebutton.buttonHtml);
-					$(tmp).css({'max-width' : 'calc(100% - '+this._data.sidebutton.maxWidth+'px)'});
-					
+					var hideFlag = false; 
+					var nodeInfo = this.get_node(obj); 
+					if(this.settings.sidebutton.is_hide){
+						hideFlag = this.settings.sidebutton.is_hide.call(null, nodeInfo) === true;
+					}
+					if(!hideFlag){
+						var templateHtml =  this._data.sidebutton.buttonHtml;
+						if(this.settings.sidebutton.filter_button){
+							var items = this.settings.sidebutton.filter_button.call(this, nodeInfo, this.settings.sidebutton.items);
+							templateHtml = this.get_button_template(items);
+						}
+
+						$(tmp).after(templateHtml);
+						$(tmp).css({'max-width' : 'calc(100% - '+this._data.sidebutton.maxWidth+'px)'});
+					}
 				}
 			}
 			
